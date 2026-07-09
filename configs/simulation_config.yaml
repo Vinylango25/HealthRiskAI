@@ -1,0 +1,116 @@
+# =============================================================================
+# HealthRisk AI — Simulation Configuration
+# Portfolio composition, scenario parameters, and scoring rubric
+# =============================================================================
+
+# ── Portfolio Allocation ──────────────────────────────────────────────────────
+portfolio:
+  total_value: 500_000_000        # $500 M total AUM
+  insurance_book: 150_000_000     # Health insurance claims book
+  hospital_bonds: 150_000_000     # Municipal / revenue bonds
+  pharma_equities: 100_000_000    # Pharma / biotech equity basket
+  credit_facility: 100_000_000    # Leveraged loan / credit facility
+
+# ── Simulation Parameters ─────────────────────────────────────────────────────
+simulation:
+  duration_years: 10
+  quarters_per_year: 4
+  total_quarters: 40
+  insurance_members: 50_000       # insured lives
+  hospital_bonds_count: 15        # distinct hospital bond issuers
+  pharma_stocks_count: 20         # distinct pharma/biotech equities
+  credit_borrowers: 10            # distinct leveraged loan borrowers
+
+  monte_carlo:
+    num_paths: 10_000
+    random_seed: 42
+    antithetic_variates: true
+    control_variates: true
+
+  time_step: "quarterly"          # quarterly granularity
+  discount_rate: 0.055            # 5.5 % risk-free rate
+
+# ── Scoring Rubric ────────────────────────────────────────────────────────────
+scoring:
+  total_points: 1000
+  insurance: 250
+  hospital_credit: 250
+  pharma_alpha: 200
+  credit_facility: 150
+  cross_asset_risk: 100
+  speed_quality: 50
+
+  thresholds:
+    excellent: 900    # >= 900 → A+
+    good: 750         # >= 750 → A
+    satisfactory: 600 # >= 600 → B
+    passing: 500      # >= 500 → C
+    failing: 0        # < 500  → F
+
+# ── Stress Scenarios ──────────────────────────────────────────────────────────
+scenarios:
+
+  pandemic:
+    label: "Novel Pathogen Outbreak"
+    probability: 0.08             # 8 % annualised probability
+    r0_range: [2.0, 3.5]
+    ifr_range: [0.005, 0.02]      # infection-fatality rate
+    peak_quarter: 3               # quarters from onset to peak
+    duration_quarters: 8
+    icu_cost: 75_000              # USD per ICU admission
+    insurance_claim_surge: 0.35   # 35 % increase in claims
+    hospital_revenue_change: 0.15 # +15 % from surge minus elective drop
+    pharma_boost: 0.25            # vaccine/treatment developer upside
+    credit_spread_shock: 0.020    # +200 bps on hospital bonds
+
+  drug_safety:
+    label: "Black-Box Warning / Market Withdrawal"
+    probability: 0.12
+    black_box_probability: 0.15
+    market_share_affected: 0.40   # fraction of revenue at risk
+    litigation_multiplier: 3.5    # litigation cost as multiple of lost revenue
+    recovery_quarters: 8
+    stock_drawdown_range: [-0.60, -0.20]
+
+  regulatory_change:
+    label: "CMS Reimbursement Rate Revision"
+    probability: 0.20
+    cms_rate_change_range: [-0.05, 0.03]   # -5 % to +3 %
+    medicare_impact_multiplier: 1.8
+    effective_quarter: 4          # quarters until policy takes effect
+    duration_years: 5             # policy horizon
+
+  hospital_merger:
+    label: "Hospital System M&A / Integration"
+    probability: 0.15
+    synergy_probability: 0.55
+    integration_risk_quarters: 4
+    revenue_synergy_range: [0.02, 0.08]   # 2–8 % revenue synergy
+    cost_synergy_range: [0.05, 0.15]      # 5–15 % cost synergy
+    credit_rating_migration:
+      upgrade: 0.20
+      stable: 0.55
+      downgrade: 0.25
+
+  interest_rate_shock:
+    label: "Federal Reserve Rate Shock"
+    probability: 0.25
+    rate_shock_range: [-0.02, 0.03]       # -200 to +300 bps
+    duration_sensitivity_years: 7.5       # modified duration of bond portfolio
+    equity_valuation_beta: -15.0          # equity impact per 100 bps
+
+  cyber_attack:
+    label: "Healthcare Sector Cyber Event"
+    probability: 0.10
+    ransom_range: [1_000_000, 10_000_000]
+    downtime_days_range: [3, 30]
+    revenue_loss_per_day: 500_000
+    regulatory_fine_range: [100_000, 5_000_000]
+
+# ── Risk Metrics Configuration ────────────────────────────────────────────────
+risk_metrics:
+  var_confidence_levels: [0.95, 0.99]
+  cvar_confidence_level: 0.975
+  time_horizons_quarters: [1, 4, 8, 12]
+  correlation_lookback_quarters: 20
+  volatility_ewma_lambda: 0.94

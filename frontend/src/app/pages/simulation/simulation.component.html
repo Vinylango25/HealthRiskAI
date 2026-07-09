@@ -1,0 +1,125 @@
+<div class="page-header">
+  <h1>HealthRisk Lab — Simulation Engine</h1>
+  <p>$500M portfolio · 10-year Monte Carlo · 6 scenario types × 3 severities · 1,000-point scoring framework</p>
+</div>
+
+<!-- Score Banner -->
+<div class="score-banner">
+  <div class="score-item">
+    <span class="score-item__label">Current Quarter</span>
+    <span class="score-item__value text-blue">Q{{ state.quarter }}</span>
+  </div>
+  <div class="score-item">
+    <span class="score-item__label">Your Portfolio</span>
+    <span class="score-item__value text-green">${{ state.portfolioValue }}M</span>
+  </div>
+  <div class="score-item">
+    <span class="score-item__label">AI Opponent</span>
+    <span class="score-item__value text-blue">${{ state.aiValue }}M</span>
+  </div>
+  <div class="score-item">
+    <span class="score-item__label">Your Score</span>
+    <span class="score-item__value">{{ state.score.total }}/1000</span>
+  </div>
+  <div class="score-item">
+    <span class="score-item__label">AI Score</span>
+    <span class="score-item__value text-blue">{{ state.aiScore.total }}/1000</span>
+  </div>
+  <div class="score-item">
+    <span class="score-item__label">Active Scenario</span>
+    <span class="score-item__value text-red">{{ state.currentScenario }}</span>
+  </div>
+</div>
+
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <!-- Equity Curves -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Portfolio Performance</span>
+      <button class="btn btn-primary" (click)="advanceQuarter()" [disabled]="running()">
+        {{ running() ? '⏳ Running...' : '▶ Advance Quarter' }}
+      </button>
+    </div>
+    <apx-chart [series]="equityChartOptions.series" [chart]="equityChartOptions.chart"
+      [stroke]="equityChartOptions.stroke" [colors]="equityChartOptions.colors"
+      [xaxis]="equityChartOptions.xaxis" [yaxis]="equityChartOptions.yaxis"
+      [tooltip]="equityChartOptions.tooltip" [legend]="equityChartOptions.legend"
+      [grid]="equityChartOptions.grid" [annotations]="equityChartOptions.annotations"
+      [theme]="equityChartOptions.theme">
+    </apx-chart>
+  </div>
+
+  <!-- Score Breakdown -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">AI Opponent Score Breakdown</span>
+      <span class="badge blue">875/1000</span>
+    </div>
+    <apx-chart [series]="scoreChartOptions.series" [chart]="scoreChartOptions.chart"
+      [labels]="scoreChartOptions.labels" [colors]="scoreChartOptions.colors"
+      [plotOptions]="scoreChartOptions.plotOptions" [legend]="scoreChartOptions.legend"
+      [tooltip]="scoreChartOptions.tooltip" [theme]="scoreChartOptions.theme">
+    </apx-chart>
+    <table class="data-table" style="margin-top:8px">
+      <thead><tr><th>Pillar</th><th>AI</th><th>You</th><th>Max</th></tr></thead>
+      <tbody>
+        <tr><td>Portfolio Performance</td><td class="text-blue">368</td><td>{{ state.score.performance }}</td><td class="text-muted">400</td></tr>
+        <tr><td>Risk Management</td><td class="text-blue">251</td><td>{{ state.score.risk }}</td><td class="text-muted">300</td></tr>
+        <tr><td>Clinical Intelligence</td><td class="text-blue">174</td><td>{{ state.score.clinical }}</td><td class="text-muted">200</td></tr>
+        <tr><td>Speed Bonus</td><td class="text-blue">82</td><td>{{ state.score.speed }}</td><td class="text-muted">100</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section-grid cols-2">
+  <!-- Scenario Selection -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Scenario Library</span>
+      <span class="badge blue">6 Types × 3 Severities</span>
+    </div>
+    <div class="scenario-grid">
+      <div *ngFor="let s of scenarios" class="scenario-card"
+        [class.active]="selectedScenario === s.id"
+        (click)="selectedScenario = s.id">
+        <div class="scenario-card__icon">{{ s.icon }}</div>
+        <div class="scenario-card__label">{{ s.label }}</div>
+        <span class="badge" [ngClass]="s.severity === 'Severe' ? 'red' : s.severity === 'Moderate' ? 'yellow' : 'green'">
+          {{ s.severity }}
+        </span>
+        <div class="scenario-card__impact">{{ s.impact }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision Console -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Decision Console</span>
+      <span class="badge green">6 Actions</span>
+    </div>
+    <div *ngFor="let d of decisions" class="decision-row">
+      <div class="decision-row__icon">{{ d.icon }}</div>
+      <div class="decision-row__body">
+        <div class="decision-row__label">{{ d.label }}</div>
+        <div class="decision-row__meta">
+          <span class="text-muted text-sm">Cost: {{ d.cost }}</span>
+          <span class="badge blue" style="margin-left:8px">{{ d.effect }}</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="font-size:11px;padding:5px 10px">Apply</button>
+    </div>
+
+    <!-- Active Alerts -->
+    <div style="margin-top:16px">
+      <div class="card__title" style="margin-bottom:8px">Active Alerts</div>
+      <div *ngFor="let a of state.activeAlerts" class="alert-banner"
+        [ngClass]="a.severity === 'critical' ? 'danger' : 'warning'"
+        style="margin-bottom:8px; padding:8px 12px">
+        <span class="alert-icon">{{ a.severity === 'critical' ? '🚨' : '⚠️' }}</span>
+        <div class="alert-text"><strong>{{ a.type }}:</strong> {{ a.message }}</div>
+      </div>
+    </div>
+  </div>
+</div>

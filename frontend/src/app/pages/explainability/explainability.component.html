@@ -1,0 +1,124 @@
+<div class="page-header">
+  <h1>Explainability Center</h1>
+  <p>SHAP TreeExplainer · LIME · Partial Dependence Plots · Counterfactual Generator — regulatory-grade AI transparency</p>
+</div>
+
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <!-- SHAP Waterfall -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">SHAP Waterfall — Patient #72M-2A</span>
+      <span class="badge red">High Risk: 57%</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">
+      Base rate 18% → Final prediction 57%. Red bars increase risk, green bars decrease it.
+      Satisfies ECOA adverse action notice requirements.
+    </p>
+    <apx-chart [series]="waterfallOptions.series" [chart]="waterfallOptions.chart"
+      [colors]="waterfallOptions.colors" [plotOptions]="waterfallOptions.plotOptions"
+      [xaxis]="waterfallOptions.xaxis" [yaxis]="waterfallOptions.yaxis"
+      [tooltip]="waterfallOptions.tooltip" [legend]="waterfallOptions.legend"
+      [grid]="waterfallOptions.grid" [theme]="waterfallOptions.theme">
+    </apx-chart>
+    <div class="risk-track">
+      <span class="risk-track__label">Base: 18%</span>
+      <div class="risk-track__bar">
+        <div class="risk-track__fill" style="width:57%;background:linear-gradient(90deg,#34a853,#f9c74f,#ea4335)"></div>
+        <div class="risk-track__marker" style="left:57%">57%</div>
+      </div>
+      <span class="risk-track__label text-red">Final: 57%</span>
+    </div>
+  </div>
+
+  <!-- Global SHAP -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Global Feature Importance (Mean |SHAP|)</span>
+      <span class="badge blue">12 Features</span>
+    </div>
+    <apx-chart [series]="globalShapOptions.series" [chart]="globalShapOptions.chart"
+      [colors]="globalShapOptions.colors" [plotOptions]="globalShapOptions.plotOptions"
+      [xaxis]="globalShapOptions.xaxis" [yaxis]="globalShapOptions.yaxis"
+      [annotations]="globalShapOptions.annotations" [tooltip]="globalShapOptions.tooltip"
+      [grid]="globalShapOptions.grid" [theme]="globalShapOptions.theme">
+    </apx-chart>
+  </div>
+</div>
+
+<!-- PDPs -->
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">PDP — Age Effect on Readmission Risk</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px">
+      Non-linear: flat below 45, steep sigmoid increase 65–80. Validates clinical meaningfulness.
+    </p>
+    <apx-chart [series]="pdpAgeOptions.series" [chart]="pdpAgeOptions.chart"
+      [stroke]="pdpAgeOptions.stroke" [colors]="pdpAgeOptions.colors"
+      [xaxis]="pdpAgeOptions.xaxis" [yaxis]="pdpAgeOptions.yaxis"
+      [annotations]="pdpAgeOptions.annotations" [tooltip]="pdpAgeOptions.tooltip"
+      [grid]="pdpAgeOptions.grid" [theme]="pdpAgeOptions.theme">
+    </apx-chart>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">PDP — HbA1c Effect on Readmission Risk</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px">
+      Inflection at ADA target 7.0% — model learned clinically meaningful boundary independently.
+    </p>
+    <apx-chart [series]="pdpHba1cOptions.series" [chart]="pdpHba1cOptions.chart"
+      [stroke]="pdpHba1cOptions.stroke" [colors]="pdpHba1cOptions.colors"
+      [xaxis]="pdpHba1cOptions.xaxis" [yaxis]="pdpHba1cOptions.yaxis"
+      [annotations]="pdpHba1cOptions.annotations" [tooltip]="pdpHba1cOptions.tooltip"
+      [grid]="pdpHba1cOptions.grid" [theme]="pdpHba1cOptions.theme">
+    </apx-chart>
+  </div>
+</div>
+
+<!-- Counterfactual Generator -->
+<div class="card">
+  <div class="card__header">
+    <span class="card__title">Counterfactual Generator — ECOA Compliance</span>
+    <span class="badge purple">What needs to change?</span>
+  </div>
+  <div class="counterfactual-grid">
+    <div class="cf-col">
+      <div class="cf-col__header">Current Patient State</div>
+      <div class="cf-row" *ngFor="let f of [
+        {label:'Age', current:patient.age, cf:counterfactual.age, unit:'yrs'},
+        {label:'Prior Admissions', current:patient.priorAdmissions, cf:counterfactual.priorAdmissions, unit:''},
+        {label:'HbA1c', current:patient.hba1c, cf:counterfactual.hba1c, unit:'%'},
+        {label:'Creatinine', current:patient.creatinine, cf:counterfactual.creatinine, unit:'mg/dL'},
+        {label:'ER Visits (12m)', current:patient.erVisits, cf:counterfactual.erVisits, unit:''}
+      ]">
+        <span class="cf-row__label">{{ f.label }}</span>
+        <span class="cf-row__current text-red">{{ f.current }}{{ f.unit }}</span>
+        <span class="cf-row__arrow">→</span>
+        <span class="cf-row__cf text-green">{{ f.cf }}{{ f.unit }}</span>
+        <span class="cf-row__change text-muted text-sm">
+          {{ f.current !== f.cf ? (f.cf < f.current ? '↓' : '↑') + ' ' + Math.abs(f.cf - f.current).toFixed(1) + f.unit : 'unchanged' }}
+        </span>
+      </div>
+    </div>
+    <div class="cf-summary">
+      <div class="cf-summary__item">
+        <span class="cf-summary__label">Current Risk</span>
+        <span class="cf-summary__value text-red">57%</span>
+      </div>
+      <div class="cf-summary__arrow">→</div>
+      <div class="cf-summary__item">
+        <span class="cf-summary__label">Counterfactual Risk</span>
+        <span class="cf-summary__value text-green">28%</span>
+      </div>
+      <div class="cf-summary__reduction">
+        <span class="badge green">−29 pp reduction</span>
+        <p class="text-sm text-muted" style="margin-top:8px">
+          Clinical action: Achieve HbA1c &lt; 7.0% (diabetes management) and reduce ER visits through primary care engagement. Estimated annual cost saving: $8,400 per patient.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

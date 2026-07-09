@@ -1,0 +1,73 @@
+<div class="page-header">
+  <h1>Pipeline Runner</h1>
+  <p>Data ingestion · Feature engineering · Model training · SHAP explainability — run any pipeline from the UI</p>
+</div>
+
+<div class="section-grid cols-3-1">
+  <!-- Pipeline Table -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">All Pipelines</span>
+      <div class="flex gap-8">
+        <span class="badge green">9 OK</span>
+        <span class="badge red">1 Failed</span>
+        <span class="badge blue">1 Running</span>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Status</th><th>Pipeline</th><th>Progress</th><th>Last Run</th><th>Duration</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of pipelines()">
+          <td>
+            <span [title]="p.status">{{ statusIcon(p.status) }}</span>
+          </td>
+          <td>
+            <span class="font-bold">{{ p.name }}</span>
+            <span class="badge ml-8" [ngClass]="statusColor(p.status)">{{ p.status }}</span>
+          </td>
+          <td>
+            <div class="flex items-center gap-8" style="min-width:120px">
+              <div class="progress-bar" style="flex:1">
+                <div class="progress-bar__fill"
+                  [style.width]="p.progress + '%'"
+                  [style.background]="p.status === 'failed' ? 'var(--red)' : p.status === 'running' ? 'var(--blue)' : 'var(--green)'">
+                </div>
+              </div>
+              <span class="text-sm text-muted">{{ p.progress }}%</span>
+            </div>
+          </td>
+          <td class="text-sm text-muted">{{ p.lastRun }}</td>
+          <td class="text-sm">{{ p.duration }}</td>
+          <td>
+            <button class="btn btn-primary"
+              style="font-size:11px;padding:4px 10px"
+              [disabled]="runningId() !== null"
+              (click)="runPipeline(p.id)">
+              {{ runningId() === p.id ? '⏳' : '▶ Run' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Log Console -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Live Log</span>
+      <span class="badge blue">{{ logs().length }} entries</span>
+    </div>
+    <div class="log-console">
+      <div *ngFor="let line of logs()" class="log-line"
+        [class.log-line--error]="line.includes('FAILED')"
+        [class.log-line--success]="line.includes('COMPLETE')"
+        [class.log-line--info]="line.includes('IN PROGRESS') || line.includes('Starting')">
+        {{ line }}
+      </div>
+    </div>
+  </div>
+</div>

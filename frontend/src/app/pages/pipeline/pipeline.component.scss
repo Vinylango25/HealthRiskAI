@@ -1,0 +1,22 @@
+.log-console {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  height: 480px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+}
+
+.log-line {
+  color: #8b949e;
+  padding: 2px 0;
+  line-height: 1.6;
+
+  &--error   { color: #ea4335; }
+  &--success { color: #34a853; }
+  &--info    { color: #1a73e8; }
+}
+
+.ml-8 { margin-left: 8px; }

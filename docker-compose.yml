@@ -1,0 +1,102 @@
+version: "3.9"
+
+# =============================================================================
+# HealthRisk AI — Docker Compose stack
+# Services:
+#   api       – FastAPI application
+#   mlflow    – MLflow tracking server
+#   postgres  – PostgreSQL database
+# =============================================================================
+
+services:
+
+  # ── FastAPI application ────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    container_name: healthrisk-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./:/app                          # live-reload in development
+      - mlartifacts:/app/mlartifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    networks:
+      - healthrisk-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ── MLflow tracking server ─────────────────────────────────────────────────
+  mlflow:
+    image: mlflow/mlflow:latest
+    container_name: healthrisk-mlflow
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlruns:/mlruns
+      - mlartifacts:/mlartifacts
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlruns.db
+      --default-artifact-root ./mlartifacts
+    networks:
+      - healthrisk-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── PostgreSQL database ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthrisk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthrisk
+      POSTGRES_USER: healthrisk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - healthrisk-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthrisk -d healthrisk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# ── Named volumes ──────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  mlruns:
+    driver: local
+  mlartifacts:
+    driver: local
+
+# ── Network ────────────────────────────────────────────────────────────────────
+networks:
+  healthrisk-net:
+    driver: bridge

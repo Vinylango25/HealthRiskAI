@@ -1,0 +1,82 @@
+<div class="page-header">
+  <h1>AI Insights</h1>
+  <p>AI-generated briefings · Model cards · Regulatory documentation</p>
+</div>
+
+<div class="section-grid cols-1-2" style="margin-bottom:20px">
+  <!-- Insight List -->
+  <div class="card" style="overflow-y:auto;max-height:600px">
+    <div class="card__header">
+      <span class="card__title">Briefings</span>
+      <span class="badge red">{{ insights.length }} active</span>
+    </div>
+    <div *ngFor="let ins of insights"
+      class="insight-item"
+      [class.insight-item--selected]="selected?.id === ins.id"
+      (click)="selected = ins">
+      <div class="insight-item__header">
+        <span>{{ categoryIcon(ins.category) }}</span>
+        <span class="badge" [ngClass]="priorityColor(ins.priority)">{{ ins.priority }}</span>
+        <span class="text-muted text-sm" style="margin-left:auto">{{ ins.timestamp }}</span>
+      </div>
+      <div class="insight-item__title">{{ ins.title }}</div>
+      <div class="insight-item__category">{{ ins.category }}</div>
+    </div>
+  </div>
+
+  <!-- Insight Detail -->
+  <div class="card" *ngIf="selected">
+    <div class="insight-detail__header">
+      <div class="flex items-center gap-12 mb-16">
+        <span class="insight-detail__icon">{{ categoryIcon(selected.category) }}</span>
+        <div>
+          <div class="flex items-center gap-8">
+            <span class="badge" [ngClass]="priorityColor(selected.priority)">{{ selected.priority }}</span>
+            <span class="badge blue">{{ selected.category }}</span>
+            <span class="badge green">{{ selected.confidence }}% confidence</span>
+          </div>
+          <h2 style="font-size:16px;font-weight:700;margin-top:6px;color:var(--text-primary)">{{ selected.title }}</h2>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.7">{{ selected.summary }}</p>
+    <div class="insight-actions">
+      <button class="btn btn-primary">Acknowledge</button>
+      <button class="btn btn-secondary">Escalate</button>
+      <button class="btn btn-secondary">Export to PDF</button>
+    </div>
+    <div class="text-muted text-sm" style="margin-top:12px">Generated: {{ selected.timestamp }}</div>
+  </div>
+</div>
+
+<!-- Model Cards -->
+<div class="card">
+  <div class="card__header">
+    <span class="card__title">Model Cards — FDA/CMS Audit Trail</span>
+    <span class="badge blue">{{ modelCards.length }} models</span>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Model</th><th>Key Metric</th><th>Training Data</th><th>Last Trained</th><th>Version</th><th>Compliance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of modelCards">
+        <td class="font-bold">{{ m.name }}</td>
+        <td class="text-green font-bold">
+          <span *ngIf="m.auroc">AUROC {{ m.auroc }}</span>
+          <span *ngIf="m.r2">R² {{ m.r2 }}</span>
+          <span *ngIf="m.cindex">C-idx {{ m.cindex }}</span>
+        </td>
+        <td>{{ m.data }}</td>
+        <td class="text-muted">{{ m.trained }}</td>
+        <td><span class="badge blue">{{ m.version }}</span></td>
+        <td>
+          <span class="badge green">SHAP ✓</span>
+          <span class="badge green" style="margin-left:4px">LIME ✓</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

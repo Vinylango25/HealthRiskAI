@@ -1,0 +1,169 @@
+# =============================================================================
+# HealthRisk AI — Data Sources Configuration
+# All external data source endpoints, parameters, and filters
+# =============================================================================
+
+# ── MIMIC-IV (PhysioNet) ──────────────────────────────────────────────────────
+mimic_iv:
+  base_url: "https://physionet.org/files/mimiciv/2.2/"
+  tables:
+    - admissions
+    - patients
+    - diagnoses_icd
+    - procedures_icd
+    - labevents
+    - prescriptions
+    - noteevents
+  cohort_filters:
+    min_age: 18
+    icd_version: 10
+  rate_limit:
+    requests_per_second: 2
+    retry_attempts: 3
+    backoff_factor: 2.0
+
+# ── WHO Global Health Observatory ─────────────────────────────────────────────
+who_gho:
+  base_url: "https://ghoapi.azureedge.net/api"
+  indicators:
+    - WHOSIS_000001   # Life expectancy at birth
+    - WHOSIS_000015   # Healthy life expectancy (HALE)
+    - NCD_BMI_30A     # Obesity prevalence (BMI >= 30)
+    - SA_0000001688   # Alcohol consumption per capita
+    - M_Est_cigs_curr # Tobacco smoking prevalence (current smokers)
+    - DIA_1           # Diabetes prevalence
+    - CARDIOVASCULAR  # CVD mortality rate
+    - CANCER          # Cancer incidence rate
+  countries: "all"
+  year_range:
+    start: 2000
+    end: 2023
+  rate_limit:
+    requests_per_second: 5
+    retry_attempts: 3
+
+# ── ClinicalTrials.gov ────────────────────────────────────────────────────────
+clinicaltrials:
+  base_url: "https://clinicaltrials.gov/api/v2"
+  search_terms:
+    - "cardiovascular disease"
+    - "diabetes mellitus"
+    - "oncology"
+    - "respiratory"
+    - "rare disease"
+  phases:
+    - PHASE2
+    - PHASE3
+    - PHASE4
+  status:
+    - RECRUITING
+    - ACTIVE_NOT_RECRUITING
+    - COMPLETED
+  max_results: 10000
+  page_size: 100
+  fields:
+    - NCTId
+    - BriefTitle
+    - Condition
+    - Phase
+    - EnrollmentCount
+    - StartDate
+    - CompletionDate
+    - OverallStatus
+    - PrimaryOutcomeMeasure
+    - InterventionName
+    - SponsorName
+    - LeadSponsorClass
+  rate_limit:
+    requests_per_second: 10
+    retry_attempts: 3
+
+# ── openFDA FAERS (Adverse Event Reporting System) ───────────────────────────
+fda_faers:
+  base_url: "https://api.fda.gov/drug"
+  endpoints:
+    - event.json
+    - label.json
+  serious_outcomes:
+    - 1   # Death
+    - 2   # Life-threatening
+    - 5   # Hospitalisation
+  max_records_per_query: 1000
+  date_range:
+    start: "20150101"
+    end: "20231231"
+  fields:
+    - safetyreportid
+    - receivedate
+    - patient.patientonsetage
+    - patient.patientsex
+    - patient.drug
+    - patient.reaction
+    - serious
+    - seriousnessother
+  rate_limit:
+    requests_per_second: 4  # free tier
+    retry_attempts: 3
+    backoff_factor: 1.5
+
+# ── CDC WONDER ────────────────────────────────────────────────────────────────
+cdc_wonder:
+  datasets:
+    - D76   # Underlying Cause of Death (ICD-10 codes)
+    - D77   # Multiple Cause of Death
+    - D140  # United States Cancer Statistics
+  grouping:
+    - State
+    - County
+    - Year
+    - Age Group
+    - Race
+    - Sex
+    - Cause of Death
+
+# ── CMS (Centers for Medicare & Medicaid Services) ───────────────────────────
+cms:
+  hospital_compare:
+    url: "https://data.cms.gov/provider-data/api/1/datastore/sql"
+    datasets:
+      - hospital_general_info
+      - complications_and_deaths
+      - readmissions_and_deaths
+      - payment_and_value_of_care
+      - patient_survey_hcahps
+  cost_reports:
+    url: "https://www.cms.gov/Research-Statistics-Data-and-Systems/Downloadable-Public-Use-Files/Cost-Reports"
+    report_types:
+      - hospital_2552_10   # Hospital cost reports
+      - snf_1728_94        # Skilled nursing facility
+  inpatient_prospective:
+    url: "https://data.cms.gov/Medicare-Inpatient/Inpatient-Prospective-Payment-System-IPPS/97k6-zzx3"
+  rate_limit:
+    requests_per_second: 5
+    retry_attempts: 3
+
+# ── SEC EDGAR ─────────────────────────────────────────────────────────────────
+sec_edgar:
+  base_url: "https://data.sec.gov"
+  pharma_sic_codes:
+    - "2836"   # Pharmaceutical preparations
+    - "2835"   # In vitro & in vivo diagnostic substances
+    - "2830"   # Industrial chemicals & synthetics
+    - "8011"   # Offices & clinics of MDs
+    - "8049"   # Offices of other health practitioners
+  filing_types:
+    - "10-K"   # Annual report
+    - "10-Q"   # Quarterly report
+  max_filings_per_company: 8
+  financial_items:
+    - Revenues
+    - ResearchAndDevelopmentExpense
+    - OperatingIncomeLoss
+    - NetIncomeLoss
+    - Assets
+    - LiabilitiesAndStockholdersEquity
+    - CashAndCashEquivalentsAtCarryingValue
+  rate_limit:
+    requests_per_second: 10
+    user_agent: "HealthRisk-AI/1.0 contact@healthrisk.ai"
+    retry_attempts: 3

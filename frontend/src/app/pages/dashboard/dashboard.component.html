@@ -1,0 +1,168 @@
+<div class="page-header">
+  <h1>Portfolio Overview</h1>
+  <p>$500M diversified health portfolio — 50,000-member insurance book · 15 hospital bonds · 20 pharma equities · 10 leveraged loans</p>
+</div>
+
+<!-- Epidemic Alerts -->
+<div *ngFor="let ep of epidemic">
+  <div class="alert-banner danger" *ngIf="ep.alert">
+    <span class="alert-icon">🚨</span>
+    <div class="alert-text">
+      <strong>Epidemic Alert — {{ ep.country }}</strong>:
+      R₀ = {{ ep.r0 }}, growth rate +{{ ep.growth }}%/week. Clinical leading indicator triggered 4–6 weeks before financial market reaction.
+    </div>
+    <span class="alert-time">Live</span>
+  </div>
+</div>
+
+<!-- 12 KPI Cards -->
+<div class="kpi-grid">
+  <app-kpi-card *ngFor="let k of kpis" [kpi]="k"></app-kpi-card>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="section-grid cols-2" style="margin-bottom:20px">
+
+  <!-- Portfolio Equity Curves -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Portfolio Performance — 10-Year Simulation</span>
+      <span class="badge green">AI +36.4%</span>
+    </div>
+    <apx-chart
+      [series]="portfolioChartOptions.series"
+      [chart]="portfolioChartOptions.chart"
+      [xaxis]="portfolioChartOptions.xaxis"
+      [yaxis]="portfolioChartOptions.yaxis"
+      [stroke]="portfolioChartOptions.stroke"
+      [tooltip]="portfolioChartOptions.tooltip"
+      [legend]="portfolioChartOptions.legend"
+      [grid]="portfolioChartOptions.grid"
+      [annotations]="portfolioChartOptions.annotations"
+      [theme]="portfolioChartOptions.theme">
+    </apx-chart>
+    <div class="chart-legend-note">
+      Red marker = Q8 Pandemic shock. AI opponent pre-positioned via WHO GHO early warning (R₀ detected Q7).
+    </div>
+  </div>
+
+  <!-- Asset Allocation Donut -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Asset Allocation</span>
+      <span class="badge blue">$500M AUM</span>
+    </div>
+    <apx-chart
+      [series]="allocationChartOptions.series"
+      [chart]="allocationChartOptions.chart"
+      [labels]="allocationChartOptions.labels"
+      [colors]="allocationChartOptions.colors"
+      [legend]="allocationChartOptions.legend"
+      [plotOptions]="allocationChartOptions.plotOptions"
+      [tooltip]="allocationChartOptions.tooltip"
+      [dataLabels]="allocationChartOptions.dataLabels"
+      [theme]="allocationChartOptions.theme">
+    </apx-chart>
+    <table class="data-table" style="margin-top:12px">
+      <thead><tr><th>Class</th><th>Weight</th><th>Value</th><th>Return</th></tr></thead>
+      <tbody>
+        <tr><td>Insurance Book</td><td>40%</td><td>$200M</td><td class="text-green">+14.2%</td></tr>
+        <tr><td>Hospital Bonds</td><td>28%</td><td>$140M</td><td class="text-yellow">+6.8%</td></tr>
+        <tr><td>Pharma Equities</td><td>22%</td><td>$110M</td><td class="text-green">+18.4%</td></tr>
+        <tr><td>Leveraged Loans</td><td>10%</td><td>$50M</td><td class="text-red">+3.1%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="section-grid cols-3">
+
+  <!-- Risk Gauge -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Aggregate Risk Score</span>
+      <span class="badge yellow">Moderate</span>
+    </div>
+    <apx-chart
+      [series]="riskGaugeOptions.series"
+      [chart]="riskGaugeOptions.chart"
+      [plotOptions]="riskGaugeOptions.plotOptions"
+      [fill]="riskGaugeOptions.fill"
+      [labels]="riskGaugeOptions.labels"
+      [theme]="riskGaugeOptions.theme">
+    </apx-chart>
+    <div class="risk-breakdown">
+      <div class="risk-item" *ngFor="let item of [
+        {label:'Market Risk',    score:58, color:'#f9c74f'},
+        {label:'Credit Risk',    score:71, color:'#ea4335'},
+        {label:'Clinical Risk',  score:55, color:'#f77f00'},
+        {label:'Liquidity Risk', score:42, color:'#34a853'}
+      ]">
+        <span class="risk-item__label">{{ item.label }}</span>
+        <div class="progress-bar" style="flex:1; margin: 0 8px">
+          <div class="progress-bar__fill" [style.width]="item.score + '%'" [style.background]="item.color"></div>
+        </div>
+        <span class="risk-item__score" [style.color]="item.color">{{ item.score }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Epidemic Monitor -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">WHO GHO Epidemic Monitor</span>
+      <span class="badge red">2 Active</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Country</th><th>R₀</th><th>Growth/wk</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ep of epidemic">
+          <td>{{ ep.country }}</td>
+          <td [class.text-red]="ep.r0 > 1.5" [class.text-yellow]="ep.r0 > 1.0 && ep.r0 <= 1.5" [class.text-green]="ep.r0 <= 1.0">
+            {{ ep.r0 }}
+          </td>
+          <td>+{{ ep.growth }}%</td>
+          <td>
+            <span class="badge" [ngClass]="ep.alert ? 'red' : 'green'">
+              {{ ep.alert ? 'ALERT' : 'Normal' }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="alert-banner warning" style="margin-top:12px">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">Clinical leading indicator: R₀ > 1.5 triggers IBNR reserve increase recommendation</span>
+    </div>
+  </div>
+
+  <!-- Model Health -->
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Model Registry</span>
+      <span class="badge green">8 Live</span>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Model</th><th>AUROC</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let m of [
+          {name:'Readmission XGBoost',  auroc:'0.812', status:'live'},
+          {name:'Stacking Ensemble',    auroc:'0.831', status:'live'},
+          {name:'Cost LightGBM',        auroc:'R²=0.28', status:'live'},
+          {name:'Hospital PD',          auroc:'0.851', status:'live'},
+          {name:'Survival DeepHit',     auroc:'C=0.762', status:'live'},
+          {name:'ClinicalBERT',         auroc:'0.783', status:'live'},
+          {name:'rNPV Calculator',      auroc:'Monte Carlo', status:'live'},
+          {name:'SHAP Explainer',       auroc:'—', status:'warning'}
+        ]">
+          <td>{{ m.name }}</td>
+          <td class="text-blue">{{ m.auroc }}</td>
+          <td><span class="badge" [ngClass]="m.status === 'live' ? 'green' : 'yellow'">{{ m.status }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+.insight-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: var(--radius-sm);
+
+  &:hover { background: var(--bg-elevated); }
+  &--selected { background: rgba(26,115,232,0.08); border-left: 2px solid var(--blue); }
+
+  &__header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  &__title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  &__category { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+}
+
+.insight-detail__icon { font-size: 32px; }
+
+.insight-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}

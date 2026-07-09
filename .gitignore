@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Env / secrets
+.env
+*.env
+
+# Data (large files)
+data/raw/
+data/features/store/
+mlruns/
+mlartifacts/
+checkpoints/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/cache/
+
+# Reports
+reports/__pycache__/
+reports/HealthRisk_AI_Research_Article.pdf
+
+# OS
+.DS_Store
+*.DS_Store

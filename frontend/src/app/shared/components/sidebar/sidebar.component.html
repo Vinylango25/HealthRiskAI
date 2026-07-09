@@ -1,0 +1,25 @@
+<nav class="sidebar" [class.collapsed]="collapsed">
+  <div class="sidebar__logo">
+    <div class="sidebar__logo-icon">⚕️</div>
+    <span class="sidebar__logo-text" *ngIf="!collapsed">HealthRisk AI</span>
+  </div>
+
+  <ul class="sidebar__nav">
+    <li *ngFor="let item of navItems">
+      <a [routerLink]="item.path"
+         routerLinkActive="active"
+         class="sidebar__link"
+         [title]="collapsed ? item.label : ''">
+        <span class="sidebar__icon">{{ item.icon }}</span>
+        <span class="sidebar__label" *ngIf="!collapsed">{{ item.label }}</span>
+        <span class="sidebar__badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="sidebar__footer">
+    <button class="sidebar__collapse-btn" (click)="collapsed = !collapsed" [title]="collapsed ? 'Expand' : 'Collapse'">
+      {{ collapsed ? '→' : '←' }}
+    </button>
+  </div>
+</nav>

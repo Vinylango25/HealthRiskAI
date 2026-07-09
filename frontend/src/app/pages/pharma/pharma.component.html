@@ -1,0 +1,91 @@
+<div class="page-header">
+  <h1>Pharma / Biotech Analytics</h1>
+  <p>rNPV Monte Carlo · Patent cliff model · Pipeline enrollment monitor · FAERS safety signals</p>
+</div>
+
+<div class="kpi-grid">
+  <app-kpi-card *ngFor="let k of kpis" [kpi]="k"></app-kpi-card>
+</div>
+
+<div class="alert-banner warning">
+  <span class="alert-icon">⚠️</span>
+  <div class="alert-text">
+    <strong>FAERS Safety Signal — PH-07:</strong> Disproportionality ROR = 3.4 (threshold 2.0). Adverse event category: hepatotoxicity. Historical signal-to-market-reaction lead time: 12–36 months.
+  </div>
+</div>
+
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">rNPV Monte Carlo Distribution (Phase III Oncology)</span>
+      <span class="badge blue">Mean $142M</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">
+      5,000-scenario simulation. Left peak = Phase III failure (−$313M). Right peak = successful launch. P(positive rNPV) = 62%.
+    </p>
+    <apx-chart [series]="rnpvChartOptions.series" [chart]="rnpvChartOptions.chart"
+      [colors]="rnpvChartOptions.colors" [xaxis]="rnpvChartOptions.xaxis"
+      [yaxis]="rnpvChartOptions.yaxis" [plotOptions]="rnpvChartOptions.plotOptions"
+      [annotations]="rnpvChartOptions.annotations" [tooltip]="rnpvChartOptions.tooltip"
+      [grid]="rnpvChartOptions.grid" [theme]="rnpvChartOptions.theme">
+    </apx-chart>
+    <div class="metric-row">
+      <div class="metric"><span class="metric__label">P5</span><span class="metric__value text-red">−$313M</span></div>
+      <div class="metric"><span class="metric__label">Mean</span><span class="metric__value text-blue">$142M</span></div>
+      <div class="metric"><span class="metric__label">P95</span><span class="metric__value text-green">$521M</span></div>
+      <div class="metric"><span class="metric__label">Prob +rNPV</span><span class="metric__value text-green">62%</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Patent Cliff Revenue Erosion</span>
+      <span class="badge green">Biologic $580M premium</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">
+      Biologic retains 50% revenue for 4.2 years vs 2.5 years for small molecule. Cumulative 10-yr premium: $580M.
+    </p>
+    <apx-chart [series]="cliffChartOptions.series" [chart]="cliffChartOptions.chart"
+      [stroke]="cliffChartOptions.stroke" [colors]="cliffChartOptions.colors"
+      [fill]="cliffChartOptions.fill" [xaxis]="cliffChartOptions.xaxis"
+      [yaxis]="cliffChartOptions.yaxis" [annotations]="cliffChartOptions.annotations"
+      [tooltip]="cliffChartOptions.tooltip" [legend]="cliffChartOptions.legend"
+      [grid]="cliffChartOptions.grid" [theme]="cliffChartOptions.theme">
+    </apx-chart>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header">
+    <span class="card__title">Pipeline Monitor — Trial Enrollment vs Target</span>
+    <span class="badge orange">2 At-Risk</span>
+  </div>
+  <apx-chart [series]="pipelineChartOptions.series" [chart]="pipelineChartOptions.chart"
+    [colors]="pipelineChartOptions.colors" [xaxis]="pipelineChartOptions.xaxis"
+    [yaxis]="pipelineChartOptions.yaxis" [plotOptions]="pipelineChartOptions.plotOptions"
+    [annotations]="pipelineChartOptions.annotations" [legend]="pipelineChartOptions.legend"
+    [tooltip]="pipelineChartOptions.tooltip" [grid]="pipelineChartOptions.grid"
+    [theme]="pipelineChartOptions.theme">
+  </apx-chart>
+  <table class="data-table" style="margin-top:12px">
+    <thead><tr><th>Asset</th><th>Indication</th><th>Phase</th><th>Enrollment</th><th>rNPV</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr *ngFor="let p of pipeline">
+        <td class="text-blue font-bold">{{ p.asset }}</td>
+        <td>{{ p.indication }}</td>
+        <td>{{ p.phase }}</td>
+        <td>
+          <div class="flex items-center gap-8">
+            <div class="progress-bar" style="width:80px"><div class="progress-bar__fill"
+              [style.width]="p.enrollment + '%'"
+              [style.background]="p.enrollment >= 80 ? 'var(--green)' : p.enrollment >= 60 ? 'var(--yellow)' : 'var(--red)'">
+            </div></div>
+            <span>{{ p.enrollment }}%</span>
+          </div>
+        </td>
+        <td class="text-green font-bold">${{ p.rnpv }}M</td>
+        <td><span class="badge" [ngClass]="statusColor(p.status)">{{ p.status }}</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>

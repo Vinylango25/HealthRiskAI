@@ -1,0 +1,214 @@
+# =============================================================================
+# HealthRisk AI — Model Configuration
+# Hyperparameters and settings for all model families
+# =============================================================================
+
+# ── Clinical NLP (Bio_ClinicalBERT) ───────────────────────────────────────────
+clinical_nlp:
+  model_name: "emilyalsentzer/Bio_ClinicalBERT"
+  max_length: 512
+  batch_size: 16
+  learning_rate: 2.0e-5
+  num_epochs: 5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  fp16: true
+  evaluation_strategy: "epoch"
+  save_strategy: "epoch"
+  load_best_model_at_end: true
+  metric_for_best_model: "f1"
+  tasks:
+    - discharge_classification
+    - ner_extraction
+    - complexity_scoring
+  ner_labels:
+    - PROBLEM
+    - TEST
+    - TREATMENT
+    - DRUG
+    - DOSAGE
+    - ROUTE
+    - FREQUENCY
+  complexity_bins: 5   # 1=low risk ... 5=critical
+
+# ── Graph Neural Network (Patient-Disease-Drug graph) ─────────────────────────
+graph_network:
+  hidden_dim: 128
+  num_layers: 3
+  num_heads: 4
+  dropout: 0.3
+  edge_dropout: 0.1
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  num_epochs: 100
+  batch_size: 512
+  patience: 15          # early stopping patience (epochs)
+  scheduler: "cosine"
+  node_types:
+    - patient
+    - diagnosis
+    - procedure
+    - drug
+    - lab_test
+  edge_types:
+    - patient_has_diagnosis
+    - patient_received_procedure
+    - patient_prescribed_drug
+    - patient_had_lab
+    - drug_treats_diagnosis
+    - diagnosis_comorbid_with
+  tasks:
+    - mortality_prediction
+    - readmission_prediction
+    - icu_transfer
+
+# ── Survival Analysis ─────────────────────────────────────────────────────────
+survival:
+  cox_ph:
+    penalizer: 0.1
+    l1_ratio: 0.0       # 0.0 = Ridge, 1.0 = Lasso
+    baseline_estimation_method: "breslow"
+    alpha: 0.05         # confidence interval level
+
+  weibull_aft:
+    penalizer: 0.1
+    l1_ratio: 0.3
+
+  deepsurv:
+    hidden_layers: [64, 64]
+    activation: "selu"
+    dropout: 0.3
+    batch_norm: true
+    learning_rate: 1.0e-3
+    batch_size: 256
+    num_epochs: 100
+    patience: 20
+    optimizer: "adam"
+
+  dynamic_deephit:
+    lstm_hidden: 128
+    num_layers: 2
+    dropout: 0.3
+    learning_rate: 5.0e-4
+    batch_size: 128
+    num_epochs: 150
+    alpha: 0.2          # weighting for ranking loss
+    beta: 0.1           # weighting for calibration loss
+    sigma: 0.1          # bandwidth for kernel
+
+  evaluation_metrics:
+    - concordance_index
+    - integrated_brier_score
+    - cumulative_dynamic_auc
+    - d_calibration
+
+# ── XGBoost Models ────────────────────────────────────────────────────────────
+xgboost:
+  cost_prediction:
+    objective: "reg:tweedie"
+    tweedie_variance_power: 1.5
+    learning_rate: 0.02
+    max_depth: 7
+    min_child_weight: 75
+    subsample: 0.75
+    colsample_bytree: 0.7
+    n_estimators: 1000
+    early_stopping_rounds: 50
+    eval_metric: "tweedie-nloglik@1.5"
+    tree_method: "hist"
+    device: "cpu"
+
+  readmission:
+    objective: "binary:logistic"
+    learning_rate: 0.01
+    max_depth: 6
+    min_child_weight: 20
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 8     # handles class imbalance
+    n_estimators: 800
+    early_stopping_rounds: 50
+    eval_metric: ["auc", "aucpr"]
+    tree_method: "hist"
+
+  hospital_default:
+    objective: "binary:logistic"
+    learning_rate: 0.02
+    max_depth: 5
+    min_child_weight: 30
+    subsample: 0.85
+    colsample_bytree: 0.75
+    scale_pos_weight: 5
+    n_estimators: 600
+    early_stopping_rounds: 40
+    eval_metric: "auc"
+    tree_method: "hist"
+
+# ── LightGBM Models ───────────────────────────────────────────────────────────
+lightgbm:
+  claims_processing:
+    objective: "tweedie"
+    tweedie_variance_power: 1.5
+    learning_rate: 0.02
+    num_leaves: 63
+    max_depth: -1         # unlimited (controlled by num_leaves)
+    min_child_samples: 50
+    subsample: 0.8
+    colsample_bytree: 0.7
+    reg_alpha: 0.1
+    reg_lambda: 0.1
+    n_estimators: 1000
+    early_stopping_rounds: 50
+    metric: "tweedie"
+    device: "cpu"
+
+  mortality_lgbm:
+    objective: "binary"
+    learning_rate: 0.01
+    num_leaves: 31
+    min_child_samples: 30
+    subsample: 0.85
+    colsample_bytree: 0.85
+    is_unbalance: true
+    n_estimators: 800
+    metric: "auc"
+
+# ── CatBoost Models ───────────────────────────────────────────────────────────
+catboost:
+  insurance_pricing:
+    loss_function: "Tweedie:variance_power=1.5"
+    learning_rate: 0.03
+    depth: 8
+    l2_leaf_reg: 3.0
+    iterations: 800
+    early_stopping_rounds: 50
+    eval_metric: "Tweedie:variance_power=1.5"
+    task_type: "CPU"
+    random_seed: 42
+
+# ── Ensemble / Meta-Learner ───────────────────────────────────────────────────
+ensemble:
+  meta_learner: "ridge"
+  alpha: 1.0
+  cv_folds: 5
+  time_aware: true      # uses time-based cross-validation splits
+  base_models:
+    - xgboost
+    - lightgbm
+    - catboost
+    - survival_cox
+    - clinical_nlp
+  stacking_passthrough: false
+  calibration_method: "isotonic"   # or "sigmoid"
+
+# ── Shared training settings ──────────────────────────────────────────────────
+training:
+  random_seed: 42
+  validation_fraction: 0.15
+  test_fraction: 0.15
+  stratify: true
+  n_jobs: -1            # use all available cores
+  mlflow_tracking: true
+  save_checkpoints: true
+  checkpoint_dir: "checkpoints/"

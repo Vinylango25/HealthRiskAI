@@ -1,0 +1,104 @@
+<div class="page-header">
+  <h1>Hospital Credit Risk</h1>
+  <p>Hospital bond PD model — AUROC 0.851, Gini 0.702 · 15 issuers · $280M exposure</p>
+</div>
+
+<div class="kpi-grid">
+  <app-kpi-card *ngFor="let k of kpis" [kpi]="k"></app-kpi-card>
+</div>
+
+<div class="alert-banner danger">
+  <span class="alert-icon">🚨</span>
+  <div class="alert-text">
+    <strong>Oakridge Medical — Critical:</strong> PD risen to 6.8% (+62% in 90 days). CMI declining for 3 consecutive quarters. Recommend bond position review.
+  </div>
+  <span class="alert-time">2h ago</span>
+</div>
+
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">PD Model ROC Curves</span>
+      <span class="badge green">AUROC 0.851</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">
+      HealthRisk AI clinical+financial model achieves AUROC 0.851 vs 0.742 for financial-only. At FPR=15%, TPR improves from 64% → 82%.
+    </p>
+    <apx-chart [series]="rocChartOptions.series" [chart]="rocChartOptions.chart"
+      [stroke]="rocChartOptions.stroke" [colors]="rocChartOptions.colors"
+      [xaxis]="rocChartOptions.xaxis" [yaxis]="rocChartOptions.yaxis"
+      [tooltip]="rocChartOptions.tooltip" [legend]="rocChartOptions.legend"
+      [grid]="rocChartOptions.grid" [theme]="rocChartOptions.theme">
+    </apx-chart>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Bond Spread History (bps over Treasury)</span>
+      <span class="badge red">+12 bps QoQ</span>
+    </div>
+    <apx-chart [series]="spreadChartOptions.series" [chart]="spreadChartOptions.chart"
+      [stroke]="spreadChartOptions.stroke" [colors]="spreadChartOptions.colors"
+      [fill]="spreadChartOptions.fill" [xaxis]="spreadChartOptions.xaxis"
+      [yaxis]="spreadChartOptions.yaxis" [tooltip]="spreadChartOptions.tooltip"
+      [legend]="spreadChartOptions.legend" [grid]="spreadChartOptions.grid"
+      [theme]="spreadChartOptions.theme">
+    </apx-chart>
+  </div>
+</div>
+
+<div class="section-grid cols-2">
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Hospital Scorecard</span>
+      <span class="badge yellow">4 Watchlist</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Hospital</th><th>Score</th><th>PD</th><th>Spread</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of hospitals">
+          <td>{{ h.name }}</td>
+          <td>
+            <div class="score-pill">
+              <span [class.text-green]="h.score >= 65" [class.text-yellow]="h.score >= 50 && h.score < 65" [class.text-red]="h.score < 50">
+                {{ h.score }}
+              </span>
+              <div class="progress-bar" style="width:80px;display:inline-block;margin-left:8px;vertical-align:middle">
+                <div class="progress-bar__fill"
+                  [style.width]="h.score + '%'"
+                  [style.background]="h.score >= 65 ? 'var(--green)' : h.score >= 50 ? 'var(--yellow)' : 'var(--red)'">
+                </div>
+              </div>
+            </div>
+          </td>
+          <td [class.text-red]="h.pd > 5" [class.text-yellow]="h.pd > 2 && h.pd <= 5" [class.text-green]="h.pd <= 2">
+            {{ h.pd }}%
+          </td>
+          <td>{{ h.spread }} bps</td>
+          <td><span class="badge" [ngClass]="statusColor(h.status)">{{ h.status }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Score Distribution — HealthRisk AI vs Financial-Only</span>
+    </div>
+    <apx-chart [series]="scoreDistOptions.series" [chart]="scoreDistOptions.chart"
+      [colors]="scoreDistOptions.colors" [xaxis]="scoreDistOptions.xaxis"
+      [yaxis]="scoreDistOptions.yaxis" [plotOptions]="scoreDistOptions.plotOptions"
+      [tooltip]="scoreDistOptions.tooltip" [legend]="scoreDistOptions.legend"
+      [grid]="scoreDistOptions.grid" [theme]="scoreDistOptions.theme">
+    </apx-chart>
+    <div class="metric-row">
+      <div class="metric"><span class="metric__label">Gini Coefficient</span><span class="metric__value text-green">0.702</span></div>
+      <div class="metric"><span class="metric__label">KS Statistic</span><span class="metric__value text-blue">0.421</span></div>
+      <div class="metric"><span class="metric__label">Avg ECL</span><span class="metric__value">$6.4M</span></div>
+    </div>
+  </div>
+</div>

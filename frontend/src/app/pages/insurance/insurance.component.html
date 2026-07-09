@@ -1,0 +1,101 @@
+<div class="page-header">
+  <h1>Insurance Analytics</h1>
+  <p>Actuarial deep-analytics — premium pricing, IBNR estimation, risk stratification (50,000-member book)</p>
+</div>
+
+<!-- KPI grid -->
+<div class="kpi-grid">
+  <app-kpi-card *ngFor="let k of kpis" [kpi]="k"></app-kpi-card>
+</div>
+
+<!-- Charts -->
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Predictive Ratio by Cost Decile</span>
+      <span class="badge green">R² +115% vs GLM</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">
+      HealthRisk AI stays within ±5% target band (green shaded). GLM systematically underprices low-cost and overprices high-cost members.
+    </p>
+    <apx-chart [series]="lossRatioChartOptions.series" [chart]="lossRatioChartOptions.chart"
+      [stroke]="lossRatioChartOptions.stroke" [colors]="lossRatioChartOptions.colors"
+      [xaxis]="lossRatioChartOptions.xaxis" [yaxis]="lossRatioChartOptions.yaxis"
+      [annotations]="lossRatioChartOptions.annotations" [tooltip]="lossRatioChartOptions.tooltip"
+      [legend]="lossRatioChartOptions.legend" [grid]="lossRatioChartOptions.grid"
+      [theme]="lossRatioChartOptions.theme">
+    </apx-chart>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">PMPM Actual vs Predicted vs Budget</span>
+      <span class="badge blue">MAPE 52%</span>
+    </div>
+    <apx-chart [series]="pmpmChartOptions.series" [chart]="pmpmChartOptions.chart"
+      [stroke]="pmpmChartOptions.stroke" [colors]="pmpmChartOptions.colors"
+      [fill]="pmpmChartOptions.fill" [xaxis]="pmpmChartOptions.xaxis"
+      [yaxis]="pmpmChartOptions.yaxis" [tooltip]="pmpmChartOptions.tooltip"
+      [legend]="pmpmChartOptions.legend" [grid]="pmpmChartOptions.grid"
+      [theme]="pmpmChartOptions.theme">
+    </apx-chart>
+  </div>
+</div>
+
+<div class="section-grid cols-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">IBNR Reserve Development</span>
+      <span class="badge purple">$24.1M current</span>
+    </div>
+    <apx-chart [series]="ibnrChartOptions.series" [chart]="ibnrChartOptions.chart"
+      [colors]="ibnrChartOptions.colors" [xaxis]="ibnrChartOptions.xaxis"
+      [yaxis]="ibnrChartOptions.yaxis" [plotOptions]="ibnrChartOptions.plotOptions"
+      [tooltip]="ibnrChartOptions.tooltip" [grid]="ibnrChartOptions.grid"
+      [theme]="ibnrChartOptions.theme">
+    </apx-chart>
+    <!-- Development Triangle -->
+    <table class="data-table" style="margin-top:16px;font-size:11px">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th *ngFor="let dp of devPeriods">{{ dp }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of ibnrTriangle; let i = index">
+          <td>{{ years[i] }}</td>
+          <td *ngFor="let val of row" [class.text-muted]="val === 0">
+            {{ val !== 0 ? ('$' + val + 'M') : '—' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Risk Stratification</span>
+      <span class="badge orange">50,000 members</span>
+    </div>
+    <apx-chart [series]="stratChartOptions.series" [chart]="stratChartOptions.chart"
+      [colors]="stratChartOptions.colors" [xaxis]="stratChartOptions.xaxis"
+      [yaxis]="stratChartOptions.yaxis" [plotOptions]="stratChartOptions.plotOptions"
+      [legend]="stratChartOptions.legend" [tooltip]="stratChartOptions.tooltip"
+      [grid]="stratChartOptions.grid" [theme]="stratChartOptions.theme">
+    </apx-chart>
+    <table class="data-table" style="margin-top:8px">
+      <thead><tr><th>Risk Tier</th><th>Members</th><th>PMPM</th><th>Ratio</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let s of strat">
+          <td>{{ s.tier }}</td>
+          <td>{{ s.count.toLocaleString() }}</td>
+          <td>${{ s.pmpm }}</td>
+          <td [class.text-red]="s.ratio > 3" [class.text-yellow]="s.ratio > 1.5 && s.ratio <= 3" [class.text-green]="s.ratio <= 1.5">
+            {{ s.ratio }}×
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
