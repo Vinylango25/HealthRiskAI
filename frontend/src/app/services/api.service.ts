@@ -6,7 +6,7 @@ import { Observable, of, catchError, map, shareReplay } from 'rxjs';
 // In production this is set via environment.ts / Vercel env vars.
 // Falls back to localhost for local dev.
 const API_BASE = (window as any).__env?.API_URL
-  || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://healthrisk-ai-production.up.railway.app');
+  || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://healthrisk-api-e5nv.onrender.com');
 
 // ── Response types ─────────────────────────────────────────────────────────────
 
