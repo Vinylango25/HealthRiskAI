@@ -9,6 +9,7 @@ import { ThemeService } from '../../../services/theme.service';
   template: `
     <header class="topbar">
       <div class="topbar__left">
+        <span class="topbar__logo-mobile">⚕️</span>
         <span class="topbar__breadcrumb">HealthRisk AI</span>
         <span class="topbar__sep">/</span>
         <span class="topbar__page">Analytics Dashboard</span>
@@ -16,7 +17,7 @@ import { ThemeService } from '../../../services/theme.service';
       <div class="topbar__right">
         <span class="topbar__status">
           <span class="status-dot"></span>
-          API Live
+          <span class="topbar__status-text">API Live</span>
         </span>
         <button class="topbar__btn" (click)="theme.toggle()" [title]="theme.isDark() ? 'Light mode' : 'Dark mode'">
           {{ theme.isDark() ? '☀️' : '🌙' }}
@@ -40,11 +41,13 @@ import { ThemeService } from '../../../services/theme.service';
     .topbar__breadcrumb { font-size: 13px; color: var(--text-muted); }
     .topbar__sep { color: var(--border-light); }
     .topbar__page { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .topbar__logo-mobile { font-size: 20px; display: none; }
     .topbar__right { display: flex; align-items: center; gap: 12px; }
     .topbar__status {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; color: var(--green);
     }
+    .topbar__status-text { }
     .status-dot {
       width: 7px; height: 7px; border-radius: 50%;
       background: var(--green);
@@ -64,6 +67,13 @@ import { ThemeService } from '../../../services/theme.service';
       background: var(--blue); color: #fff;
       display: flex; align-items: center; justify-content: center;
       font-size: 12px; font-weight: 700;
+    }
+    /* Mobile */
+    @media (max-width: 768px) {
+      .topbar__breadcrumb, .topbar__sep { display: none; }
+      .topbar__logo-mobile { display: inline; }
+      .topbar__page { font-size: 14px; }
+      .topbar__status-text { display: none; }
     }
   `]
 })

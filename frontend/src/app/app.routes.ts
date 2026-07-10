@@ -13,29 +13,14 @@ export const routes: Routes = [
       import('./pages/insurance/insurance.component').then(m => m.InsuranceComponent),
   },
   {
-    path: 'credit-risk',
+    path: 'risk',
     loadComponent: () =>
-      import('./pages/credit-risk/credit-risk.component').then(m => m.CreditRiskComponent),
-  },
-  {
-    path: 'pharma',
-    loadComponent: () =>
-      import('./pages/pharma/pharma.component').then(m => m.PharmaComponent),
+      import('./pages/risk/risk.component').then(m => m.RiskComponent),
   },
   {
     path: 'simulation',
     loadComponent: () =>
       import('./pages/simulation/simulation.component').then(m => m.SimulationComponent),
-  },
-  {
-    path: 'explainability',
-    loadComponent: () =>
-      import('./pages/explainability/explainability.component').then(m => m.ExplainabilityComponent),
-  },
-  {
-    path: 'pipeline',
-    loadComponent: () =>
-      import('./pages/pipeline/pipeline.component').then(m => m.PipelineComponent),
   },
   {
     path: 'insights',

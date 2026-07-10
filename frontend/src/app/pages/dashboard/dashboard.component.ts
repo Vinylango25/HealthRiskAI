@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { NgFor, NgClass, NgIf, DecimalPipe } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { MockDataService, KpiCard } from '../../services/mock-data.service';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
+import { ApiService, LiveDashboard } from '../../services/api.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,10 +13,16 @@ import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.comp
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
-  private svc = inject(MockDataService);
+  private svc  = inject(MockDataService);
+  private api  = inject(ApiService);
 
   kpis: KpiCard[] = [];
   epidemic: { country: string; r0: number; growth: number; alert: boolean }[] = [];
+
+  // Live data from real API
+  live = signal<LiveDashboard | null>(null);
+  liveLoading = signal(true);
+  apiStatus = signal<'live' | 'mock' | 'loading'>('loading');
 
   portfolioChartOptions: any = {};
   allocationChartOptions: any = {};
@@ -24,6 +31,23 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.kpis      = this.svc.portfolioKpis();
     this.epidemic  = this.svc.epidemicData();
+
+    // Pull live data — updates KPIs that have real equivalents
+    this.api.liveDashboard().subscribe(data => {
+      this.live.set(data);
+      this.liveLoading.set(false);
+      this.apiStatus.set(data.fallback ? 'mock' : 'live');
+
+      // Patch KPIs with real values where available
+      if (!data.fallback) {
+        this.kpis = this.kpis.map(k => {
+          if (k.id === 'horizon' && data.recruiting_trials) {
+            return { ...k, value: data.recruiting_trials.toLocaleString(), unit: 'trials', label: 'Recruiting Trials', icon: '🔬', description: 'Active recruiting trials on ClinicalTrials.gov', delta: 'ClinicalTrials.gov live' };
+          }
+          return k;
+        });
+      }
+    });
     this.buildPortfolioChart();
     this.buildAllocationChart();
     this.buildRiskGauge();

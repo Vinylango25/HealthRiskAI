@@ -1,34 +1,43 @@
-<div class="page-header">
-  <h1>AI Insights</h1>
-  <p>AI-generated briefings · Model cards · Regulatory documentation</p>
+<!-- ── Inner sub-tab bar ─────────────────────────────────────────────── -->
+<div class="inner-tabs">
+  <button class="inner-tab" [class.inner-tab--active]="tab()==='briefings'"
+    (click)="tab.set('briefings')">🤖 Briefings</button>
+  <button class="inner-tab" [class.inner-tab--active]="tab()==='explainability'"
+    (click)="tab.set('explainability')">🔍 Explainability</button>
+  <button class="inner-tab" [class.inner-tab--active]="tab()==='pipeline'"
+    (click)="tab.set('pipeline')">⚙️ Pipeline</button>
 </div>
 
-<div class="section-grid cols-1-2" style="margin-bottom:20px">
-  <!-- Insight List -->
-  <div class="card" style="overflow-y:auto;max-height:600px">
-    <div class="card__header">
-      <span class="card__title">Briefings</span>
-      <span class="badge red">{{ insights.length }} active</span>
-    </div>
-    <div *ngFor="let ins of insights"
-      class="insight-item"
-      [class.insight-item--selected]="selected?.id === ins.id"
-      (click)="selected = ins">
-      <div class="insight-item__header">
-        <span>{{ categoryIcon(ins.category) }}</span>
-        <span class="badge" [ngClass]="priorityColor(ins.priority)">{{ ins.priority }}</span>
-        <span class="text-muted text-sm" style="margin-left:auto">{{ ins.timestamp }}</span>
-      </div>
-      <div class="insight-item__title">{{ ins.title }}</div>
-      <div class="insight-item__category">{{ ins.category }}</div>
-    </div>
+<!-- ═══════════════ BRIEFINGS ═══════════════ -->
+<ng-container *ngIf="tab()==='briefings'">
+  <div class="page-header">
+    <h1>AI Insights</h1>
+    <p>AI-generated briefings · Model cards · Regulatory documentation</p>
   </div>
 
-  <!-- Insight Detail -->
-  <div class="card" *ngIf="selected">
-    <div class="insight-detail__header">
+  <div class="section-grid cols-1-2" style="margin-bottom:20px">
+    <div class="card" style="overflow-y:auto;max-height:600px">
+      <div class="card__header">
+        <span class="card__title">Briefings</span>
+        <span class="badge red">{{ insights.length }} active</span>
+      </div>
+      <div *ngFor="let ins of insights"
+        class="insight-item"
+        [class.insight-item--selected]="selected?.id === ins.id"
+        (click)="selected = ins">
+        <div class="insight-item__header">
+          <span>{{ categoryIcon(ins.category) }}</span>
+          <span class="badge" [ngClass]="priorityColor(ins.priority)">{{ ins.priority }}</span>
+          <span class="text-muted text-sm" style="margin-left:auto">{{ ins.timestamp }}</span>
+        </div>
+        <div class="insight-item__title">{{ ins.title }}</div>
+        <div class="insight-item__category">{{ ins.category }}</div>
+      </div>
+    </div>
+
+    <div class="card" *ngIf="selected">
       <div class="flex items-center gap-12 mb-16">
-        <span class="insight-detail__icon">{{ categoryIcon(selected.category) }}</span>
+        <span style="font-size:28px">{{ categoryIcon(selected.category) }}</span>
         <div>
           <div class="flex items-center gap-8">
             <span class="badge" [ngClass]="priorityColor(selected.priority)">{{ selected.priority }}</span>
@@ -38,45 +47,271 @@
           <h2 style="font-size:16px;font-weight:700;margin-top:6px;color:var(--text-primary)">{{ selected.title }}</h2>
         </div>
       </div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.7">{{ selected.summary }}</p>
+      <div class="insight-actions">
+        <button class="btn btn-primary">Acknowledge</button>
+        <button class="btn btn-secondary">Escalate</button>
+        <button class="btn btn-secondary">Export to PDF</button>
+      </div>
+      <div class="text-muted text-sm" style="margin-top:12px">Generated: {{ selected.timestamp }}</div>
     </div>
-    <p style="font-size:13px;color:var(--text-secondary);line-height:1.7">{{ selected.summary }}</p>
-    <div class="insight-actions">
-      <button class="btn btn-primary">Acknowledge</button>
-      <button class="btn btn-secondary">Escalate</button>
-      <button class="btn btn-secondary">Export to PDF</button>
+  </div>
+
+<!-- Live data from real APIs -->
+<div class="section-grid cols-2" style="margin-bottom:20px" *ngIf="!liveLoading()">
+  <!-- FAERS real data -->
+  <div class="card" *ngIf="faersData()">
+    <div class="card__header">
+      <span class="card__title">FDA FAERS — Top Adverse Reactions (Aspirin)</span>
+      <span class="badge" [ngClass]="faersData()?.fallback ? 'yellow' : 'green'">
+        {{ faersData()?.fallback ? 'Mock' : 'Live · FDA' }}
+      </span>
     </div>
-    <div class="text-muted text-sm" style="margin-top:12px">Generated: {{ selected.timestamp }}</div>
+    <div *ngFor="let r of faersData()?.top_reactions?.slice(0,5)" style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-size:13px">{{ r.reaction }}</span>
+      <div class="progress-bar" style="width:120px">
+        <div class="progress-bar__fill" style="background:var(--orange)"
+          [style.width]="((r.count / (faersData()?.top_reactions?.[0]?.count || 1)) * 100) + '%'">
+        </div>
+      </div>
+      <span class="text-muted text-sm" style="width:60px;text-align:right">{{ r.count | number }}</span>
+    </div>
+    <p class="text-muted text-sm" style="margin-top:8px">Source: {{ faersData()?.source }}</p>
+  </div>
+
+  <!-- ClinicalTrials real data -->
+  <div class="card" *ngIf="trialsData()">
+    <div class="card__header">
+      <span class="card__title">ClinicalTrials.gov — Recruiting Diabetes Trials</span>
+      <span class="badge" [ngClass]="trialsData()?.fallback ? 'yellow' : 'green'">
+        {{ trialsData()?.fallback ? 'Mock' : 'Live · ClinicalTrials.gov' }}
+      </span>
+    </div>
+    <div *ngFor="let t of trialsData()?.trials" style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:3px">{{ t.title | slice:0:70 }}…</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="badge blue">{{ t.nct_id }}</span>
+        <span class="badge green">{{ t.status }}</span>
+        <span class="badge" style="background:var(--bg-elevated);color:var(--text-muted)">{{ t.phase }}</span>
+        <span class="text-muted text-sm">{{ t.enrollment }} participants</span>
+      </div>
+    </div>
+    <p class="text-muted text-sm" style="margin-top:8px">Source: {{ trialsData()?.source }}</p>
   </div>
 </div>
 
-<!-- Model Cards -->
-<div class="card">
-  <div class="card__header">
-    <span class="card__title">Model Cards — FDA/CMS Audit Trail</span>
-    <span class="badge blue">{{ modelCards.length }} models</span>
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Model Cards — FDA/CMS Audit Trail</span>
+      <span class="badge blue">{{ modelCards.length }} models</span>
+    </div>    <div class="table-responsive-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Model</th><th>Key Metric</th><th>Training Data</th><th>Last Trained</th><th>Version</th><th>Compliance</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of modelCards">
+            <td class="font-bold">{{ m.name }}</td>
+            <td class="text-green font-bold">
+              <span *ngIf="m.auroc">AUROC {{ m.auroc }}</span>
+              <span *ngIf="m.r2">R² {{ m.r2 }}</span>
+              <span *ngIf="m.cindex">C-idx {{ m.cindex }}</span>
+            </td>
+            <td>{{ m.data }}</td>
+            <td class="text-muted">{{ m.trained }}</td>
+            <td><span class="badge blue">{{ m.version }}</span></td>
+            <td>
+              <span class="badge green">SHAP ✓</span>
+              <span class="badge green" style="margin-left:4px">LIME ✓</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Model</th><th>Key Metric</th><th>Training Data</th><th>Last Trained</th><th>Version</th><th>Compliance</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let m of modelCards">
-        <td class="font-bold">{{ m.name }}</td>
-        <td class="text-green font-bold">
-          <span *ngIf="m.auroc">AUROC {{ m.auroc }}</span>
-          <span *ngIf="m.r2">R² {{ m.r2 }}</span>
-          <span *ngIf="m.cindex">C-idx {{ m.cindex }}</span>
-        </td>
-        <td>{{ m.data }}</td>
-        <td class="text-muted">{{ m.trained }}</td>
-        <td><span class="badge blue">{{ m.version }}</span></td>
-        <td>
-          <span class="badge green">SHAP ✓</span>
-          <span class="badge green" style="margin-left:4px">LIME ✓</span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+</ng-container>
+
+<!-- ═══════════════ EXPLAINABILITY ═══════════════ -->
+<ng-container *ngIf="tab()==='explainability'">
+  <div class="page-header">
+    <h1>Explainability Center</h1>
+    <p>SHAP TreeExplainer · LIME · Partial Dependence Plots · Counterfactual Generator — regulatory-grade AI transparency</p>
+  </div>
+
+  <div class="section-grid cols-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">SHAP Waterfall — Patient #72M-2A</span>
+        <span class="badge red">High Risk: 57%</span>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">
+        Base rate 18% → Final prediction 57%. Red = increases risk, green = decreases risk.
+      </p>
+      <apx-chart [series]="waterfallOptions.series" [chart]="waterfallOptions.chart"
+        [colors]="waterfallOptions.colors" [plotOptions]="waterfallOptions.plotOptions"
+        [xaxis]="waterfallOptions.xaxis" [yaxis]="waterfallOptions.yaxis"
+        [tooltip]="waterfallOptions.tooltip" [legend]="waterfallOptions.legend"
+        [grid]="waterfallOptions.grid" [theme]="waterfallOptions.theme">
+      </apx-chart>
+      <div class="risk-track">
+        <span class="risk-track__label">Base: 18%</span>
+        <div class="risk-track__bar">
+          <div class="risk-track__fill" style="width:57%;background:linear-gradient(90deg,#34a853,#f9c74f,#ea4335)"></div>
+          <div class="risk-track__marker" style="left:57%">57%</div>
+        </div>
+        <span class="risk-track__label text-red">Final: 57%</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">Global Feature Importance (Mean |SHAP|)</span>
+        <span class="badge blue">12 Features</span>
+      </div>
+      <apx-chart [series]="globalShapOptions.series" [chart]="globalShapOptions.chart"
+        [colors]="globalShapOptions.colors" [plotOptions]="globalShapOptions.plotOptions"
+        [xaxis]="globalShapOptions.xaxis" [yaxis]="globalShapOptions.yaxis"
+        [tooltip]="globalShapOptions.tooltip" [grid]="globalShapOptions.grid"
+        [theme]="globalShapOptions.theme">
+      </apx-chart>
+    </div>
+  </div>
+
+  <div class="section-grid cols-2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card__header"><span class="card__title">PDP — Age Effect on Readmission Risk</span></div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Non-linear: flat below 45, steep sigmoid increase 65–80.</p>
+      <apx-chart [series]="pdpAgeOptions.series" [chart]="pdpAgeOptions.chart"
+        [stroke]="pdpAgeOptions.stroke" [colors]="pdpAgeOptions.colors"
+        [xaxis]="pdpAgeOptions.xaxis" [yaxis]="pdpAgeOptions.yaxis"
+        [annotations]="pdpAgeOptions.annotations" [tooltip]="pdpAgeOptions.tooltip"
+        [grid]="pdpAgeOptions.grid" [theme]="pdpAgeOptions.theme">
+      </apx-chart>
+    </div>
+    <div class="card">
+      <div class="card__header"><span class="card__title">PDP — HbA1c Effect on Readmission Risk</span></div>
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Inflection at ADA target 7.0%.</p>
+      <apx-chart [series]="pdpHba1cOptions.series" [chart]="pdpHba1cOptions.chart"
+        [stroke]="pdpHba1cOptions.stroke" [colors]="pdpHba1cOptions.colors"
+        [xaxis]="pdpHba1cOptions.xaxis" [yaxis]="pdpHba1cOptions.yaxis"
+        [annotations]="pdpHba1cOptions.annotations" [tooltip]="pdpHba1cOptions.tooltip"
+        [grid]="pdpHba1cOptions.grid" [theme]="pdpHba1cOptions.theme">
+      </apx-chart>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <span class="card__title">Counterfactual Generator — ECOA Compliance</span>
+      <span class="badge purple">What needs to change?</span>
+    </div>
+    <div class="counterfactual-grid">
+      <div class="cf-col">
+        <div class="cf-col__header">Current → Counterfactual</div>
+        <div class="cf-row" *ngFor="let f of [
+          {label:'Age', current:patient.age, cf:counterfactual.age, unit:'yrs'},
+          {label:'Prior Admissions', current:patient.priorAdmissions, cf:counterfactual.priorAdmissions, unit:''},
+          {label:'HbA1c', current:patient.hba1c, cf:counterfactual.hba1c, unit:'%'},
+          {label:'Creatinine', current:patient.creatinine, cf:counterfactual.creatinine, unit:'mg/dL'},
+          {label:'ER Visits (12m)', current:patient.erVisits, cf:counterfactual.erVisits, unit:''}
+        ]">
+          <span class="cf-row__label">{{ f.label }}</span>
+          <span class="cf-row__current text-red">{{ f.current }}{{ f.unit }}</span>
+          <span class="cf-row__arrow">→</span>
+          <span class="cf-row__cf text-green">{{ f.cf }}{{ f.unit }}</span>
+          <span class="cf-row__change text-muted text-sm">
+            {{ f.current !== f.cf ? (f.cf < f.current ? '↓' : '↑') + ' ' + Math.abs(f.cf - f.current).toFixed(1) + f.unit : 'unchanged' }}
+          </span>
+        </div>
+      </div>
+      <div class="cf-summary">
+        <div class="cf-summary__item">
+          <span class="cf-summary__label">Current Risk</span>
+          <span class="cf-summary__value text-red">57%</span>
+        </div>
+        <div class="cf-summary__arrow">→</div>
+        <div class="cf-summary__item">
+          <span class="cf-summary__label">Counterfactual Risk</span>
+          <span class="cf-summary__value text-green">28%</span>
+        </div>
+        <div class="cf-summary__reduction">
+          <span class="badge green">−29 pp reduction</span>
+          <p class="text-sm text-muted" style="margin-top:8px">
+            Clinical action: Achieve HbA1c &lt; 7.0% and reduce ER visits. Estimated saving: $8,400/patient/year.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- ═══════════════ PIPELINE ═══════════════ -->
+<ng-container *ngIf="tab()==='pipeline'">
+  <div class="page-header">
+    <h1>Pipeline Runner</h1>
+    <p>Data ingestion · Feature engineering · Model training · SHAP explainability</p>
+  </div>
+
+  <div class="section-grid cols-3-1">
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">All Pipelines</span>
+        <div class="flex gap-8">
+          <span class="badge green">9 OK</span>
+          <span class="badge red">1 Failed</span>
+          <span class="badge blue">1 Running</span>
+        </div>
+      </div>
+      <div class="table-responsive-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Status</th><th>Pipeline</th><th>Progress</th><th>Last Run</th><th>Duration</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of pipelines()">
+              <td><span [title]="p.status">{{ pipelineStatusIcon(p.status) }}</span></td>
+              <td>
+                <span class="font-bold">{{ p.name }}</span>
+                <span class="badge" style="margin-left:6px" [ngClass]="pipelineStatusColor(p.status)">{{ p.status }}</span>
+              </td>
+              <td>
+                <div class="flex items-center gap-8" style="min-width:120px">
+                  <div class="progress-bar" style="flex:1">
+                    <div class="progress-bar__fill"
+                      [style.width]="p.progress+'%'"
+                      [style.background]="p.status==='failed'?'var(--red)':p.status==='running'?'var(--blue)':'var(--green)'">
+                    </div>
+                  </div>
+                  <span class="text-sm text-muted">{{ p.progress }}%</span>
+                </div>
+              </td>
+              <td class="text-sm text-muted">{{ p.lastRun }}</td>
+              <td class="text-sm">{{ p.duration }}</td>
+              <td>
+                <button class="btn btn-primary" style="font-size:11px;padding:4px 10px"
+                  [disabled]="runningId() !== null" (click)="runPipeline(p.id)">
+                  {{ runningId() === p.id ? '⏳' : '▶ Run' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">Live Log</span>
+        <span class="badge blue">{{ logs().length }} entries</span>
+      </div>
+      <div class="log-console">
+        <div *ngFor="let line of logs()" class="log-line"
+          [class.log-line--error]="line.includes('FAILED')"
+          [class.log-line--success]="line.includes('COMPLETE')"
+          [class.log-line--info]="line.includes('IN PROGRESS') || line.includes('Starting')">
+          {{ line }}
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

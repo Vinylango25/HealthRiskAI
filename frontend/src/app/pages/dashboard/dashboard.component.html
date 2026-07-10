@@ -3,6 +3,25 @@
   <p>$500M diversified health portfolio — 50,000-member insurance book · 15 hospital bonds · 20 pharma equities · 10 leveraged loans</p>
 </div>
 
+<!-- API status banner -->
+<div class="alert-banner info" *ngIf="apiStatus() === 'loading'" style="margin-bottom:12px">
+  <span class="alert-icon">⏳</span>
+  <span class="alert-text">Connecting to live data sources (WHO GHO · FDA FAERS · ClinicalTrials.gov · CMS)…</span>
+</div>
+<div class="alert-banner success" *ngIf="apiStatus() === 'live'" style="margin-bottom:12px">
+  <span class="alert-icon">🟢</span>
+  <span class="alert-text">
+    <strong>Live data active</strong> —
+    WHO Life Expectancy: <strong>{{ live()?.who_life_expectancy | number:'1.1-1' }} yrs</strong> ·
+    FAERS Reactions: <strong>{{ live()?.faers_aspirin_reactions | number }}</strong> ·
+    Recruiting Trials: <strong>{{ live()?.recruiting_trials | number }}</strong>
+  </span>
+</div>
+<div class="alert-banner warning" *ngIf="apiStatus() === 'mock'" style="margin-bottom:12px">
+  <span class="alert-icon">⚠️</span>
+  <span class="alert-text">Backend offline — showing cached mock data. Deploy backend to Railway to enable live data.</span>
+</div>
+
 <!-- Epidemic Alerts -->
 <div *ngFor="let ep of epidemic">
   <div class="alert-banner danger" *ngIf="ep.alert">
@@ -63,6 +82,7 @@
       [dataLabels]="allocationChartOptions.dataLabels"
       [theme]="allocationChartOptions.theme">
     </apx-chart>
+    <div class="table-responsive-wrap">
     <table class="data-table" style="margin-top:12px">
       <thead><tr><th>Class</th><th>Weight</th><th>Value</th><th>Return</th></tr></thead>
       <tbody>
@@ -72,6 +92,7 @@
         <tr><td>Leveraged Loans</td><td>10%</td><td>$50M</td><td class="text-red">+3.1%</td></tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 
@@ -114,6 +135,7 @@
       <span class="card__title">WHO GHO Epidemic Monitor</span>
       <span class="badge red">2 Active</span>
     </div>
+    <div class="table-responsive-wrap">
     <table class="data-table">
       <thead>
         <tr><th>Country</th><th>R₀</th><th>Growth/wk</th><th>Status</th></tr>
@@ -133,6 +155,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
     <div class="alert-banner warning" style="margin-top:12px">
       <span class="alert-icon">⚠️</span>
       <span class="alert-text">Clinical leading indicator: R₀ > 1.5 triggers IBNR reserve increase recommendation</span>
@@ -145,6 +168,7 @@
       <span class="card__title">Model Registry</span>
       <span class="badge green">8 Live</span>
     </div>
+    <div class="table-responsive-wrap">
     <table class="data-table">
       <thead><tr><th>Model</th><th>AUROC</th><th>Status</th></tr></thead>
       <tbody>
@@ -164,5 +188,6 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>

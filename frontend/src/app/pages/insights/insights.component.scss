@@ -21,3 +21,28 @@
   margin-top: 16px;
   flex-wrap: wrap;
 }
+
+.inner-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.inner-tab {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+
+  &:hover { color: var(--text-primary); }
+  &--active { color: var(--blue); border-bottom-color: var(--blue); }
+}
+@media (max-width: 480px) {
+  .inner-tab { padding: 8px 10px; font-size: 11px; }
+}
