@@ -1,0 +1,129 @@
+# =============================================================================
+# HealthRisk AI — Render Infrastructure as Code
+# Docs: https://render.com/docs/infrastructure-as-code
+#
+# Services defined here:
+#   1. api        — FastAPI web service (Docker)
+#   2. postgres   — Managed PostgreSQL database
+# =============================================================================
+
+databases:
+  # ── Managed PostgreSQL ──────────────────────────────────────────────────────
+  - name: healthrisk-postgres
+    databaseName: healthrisk
+    user: healthrisk
+    plan: free           # upgrade to starter ($7/mo) for production
+    region: oregon       # change to match your preferred region
+
+services:
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  - type: web
+    name: healthrisk-api
+    region: oregon       # should match database region to avoid latency
+    plan: free           # upgrade to starter ($7/mo) for production
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Auto-deploy whenever the main branch is pushed
+    branch: main
+    autoDeploy: true
+
+    # Port the container listens on
+    port: 8000
+
+    # Health check — Render will restart the service if this fails
+    healthCheckPath: /health
+
+    # Environment variables
+    # Render injects DATABASE_URL automatically from the linked database.
+    # All other secrets must be set manually in the Render dashboard
+    # (Dashboard → healthrisk-api → Environment).
+    envVars:
+      # ── Auto-injected by Render (fromDatabase) ──────────────────────────
+      - key: DATABASE_URL
+        fromDatabase:
+          name: healthrisk-postgres
+          property: connectionString
+
+      # ── App settings ─────────────────────────────────────────────────────
+      - key: ENVIRONMENT
+        value: production
+
+      - key: LOG_LEVEL
+        value: INFO
+
+      - key: API_HOST
+        value: 0.0.0.0
+
+      - key: API_PORT
+        value: "8000"
+
+      - key: WORKERS
+        value: "2"
+
+      - key: API_RATE_LIMIT_PER_MINUTE
+        value: "60"
+
+      - key: DATA_FETCH_CONCURRENCY
+        value: "5"
+
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: "30"
+
+      # ── Secrets — set these manually in the Render dashboard ─────────────
+      # Do NOT put real values here; this file is committed to git.
+      - key: GEMINI_API_KEY
+        sync: false      # Render will prompt you to fill this in
+
+      - key: PHYSIONET_USERNAME
+        sync: false
+
+      - key: PHYSIONET_PASSWORD
+        sync: false
+
+      - key: OPENFDA_API_KEY
+        sync: false
+
+      - key: WANDB_API_KEY
+        sync: false
+
+      - key: WANDB_PROJECT
+        value: healthrisk-ai
+
+      - key: WANDB_ENTITY
+        sync: false
+
+      - key: CRON_SECRET
+        sync: false
+
+      - key: SEC_EDGAR_USER_AGENT
+        value: HealthRisk-AI/1.0 contact@healthrisk.ai
+
+      # ── External service URLs ─────────────────────────────────────────────
+      - key: WHO_GHO_BASE_URL
+        value: https://ghoapi.azureedge.net/api
+
+      - key: CLINICALTRIALS_BASE_URL
+        value: https://clinicaltrials.gov/api/v2
+
+      - key: OPENFDA_BASE_URL
+        value: https://api.fda.gov/drug
+
+      - key: CDC_WONDER_BASE_URL
+        value: https://wonder.cdc.gov
+
+      - key: CMS_BASE_URL
+        value: https://data.cms.gov/provider-data/api/1/datastore/sql
+
+      - key: SEC_EDGAR_BASE_URL
+        value: https://data.sec.gov
+
+      # ── MLflow (using Render's internal disk or external URI) ─────────────
+      # For production, point this at a persistent store (e.g. S3 or a
+      # separate MLflow service). For now it falls back to local storage.
+      - key: MLFLOW_TRACKING_URI
+        value: ./mlruns
+
+      - key: MLFLOW_EXPERIMENT_NAME
+        value: healthrisk-ai

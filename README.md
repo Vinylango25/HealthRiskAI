@@ -47,9 +47,10 @@
 18. [Configuration](#18-configuration)
 19. [Testing](#19-testing)
 20. [Docker](#20-docker)
-21. [Discussion](#21-discussion)
-22. [References](#22-references)
-23. [Contributing](#23-contributing)
+21. [Deploying to Render](#21-deploying-to-render)
+22. [Discussion](#22-discussion)
+23. [References](#23-references)
+24. [Contributing](#24-contributing)
 
 ---
 
@@ -271,6 +272,15 @@ pytest tests/ -m "not integration" -v
 ### Option C — Live Dashboard
 
 Visit **https://healthrisk-ai-dashboard.vercel.app** — no setup required.
+
+### Option D — Deploy to Render (Backend)
+
+See [Section 21 — Deploying to Render](#21-deploying-to-render) for full instructions.
+
+```bash
+# One-liner: connect repo to Render via Blueprint
+# Render Dashboard → New → Blueprint → select this repo
+```
 
 ---
 
@@ -1414,7 +1424,67 @@ docker compose down
 
 ---
 
-## 21. Discussion
+## 21. Deploying to Render
+
+The backend API deploys to [Render](https://render.com) using the `render.yaml` file at the project root. The frontend deploys to Vercel separately (see `frontend/vercel.json`).
+
+### Prerequisites
+
+- A [Render account](https://dashboard.render.com/register)
+- The repository pushed to GitHub
+
+### One-click deploy via Blueprint
+
+1. Go to **Render Dashboard → New → Blueprint**
+2. Connect your GitHub repository
+3. Render detects `render.yaml` automatically and provisions:
+   - **healthrisk-api** — FastAPI web service (Docker)
+   - **healthrisk-postgres** — Managed PostgreSQL database
+
+### Set secrets in the Render dashboard
+
+After the Blueprint is applied, navigate to **Dashboard → healthrisk-api → Environment** and set these secrets (marked `sync: false` in `render.yaml`):
+
+| Variable | Where to get it |
+|---|---|
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| `PHYSIONET_USERNAME` | [PhysioNet account](https://physionet.org/settings/account/) |
+| `PHYSIONET_PASSWORD` | PhysioNet account |
+| `OPENFDA_API_KEY` | [openFDA](https://open.fda.gov/apis/authentication/) |
+| `WANDB_API_KEY` | [Weights & Biases](https://wandb.ai/settings) |
+| `WANDB_ENTITY` | Your W&B team/username |
+| `CRON_SECRET` | Generate with `openssl rand -hex 32` |
+
+> `DATABASE_URL` is injected automatically — Render links it from the managed Postgres instance.
+
+### Set up CI/CD auto-deploy (GitHub Actions)
+
+The CI pipeline in `.github/workflows/ci.yml` triggers a Render deploy on every push to `main`, after tests and Docker build pass.
+
+1. Go to **Render Dashboard → healthrisk-api → Settings → Deploy Hook** and copy the URL
+2. Add it to GitHub: **Repo → Settings → Secrets and variables → Actions → New repository secret**
+   - Name: `RENDER_DEPLOY_HOOK_URL`
+   - Value: *(the URL from Render)*
+
+Pushes to `main` will now automatically deploy after CI passes.
+
+### Verify the deployment
+
+```bash
+# Health check
+curl https://healthrisk-api.onrender.com/health
+
+# Interactive API docs
+open https://healthrisk-api.onrender.com/docs
+```
+
+### Free tier limitations
+
+Render's free tier spins down services after 15 minutes of inactivity (cold starts ~30s). Upgrade to the **Starter plan ($7/mo)** for always-on services. Update `plan: starter` in `render.yaml` and re-apply the Blueprint.
+
+---
+
+## 22. Discussion
 
 ### Why Clinical Data Outperforms Financial-Only Models
 

@@ -196,3 +196,24 @@ jobs:
       - name: Clean up Docker image
         if: always()
         run: docker rmi healthrisk-ai:ci-${{ github.sha }} || true
+
+  # ── Deploy to Render ───────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only deploy on pushes to main — not on PRs
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs:
+      - test
+      - docker-build
+
+    steps:
+      - name: Trigger Render deploy
+        # Render exposes a deploy hook URL per service.
+        # Add it as a secret: Settings → Secrets → RENDER_DEPLOY_HOOK_URL
+        # Get it from: Render dashboard → healthrisk-api → Settings → Deploy Hook
+        run: |
+          curl --silent --show-error --fail \
+            "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "Render deploy triggered successfully."
