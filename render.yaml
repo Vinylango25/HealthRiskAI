@@ -29,9 +29,6 @@ services:
     branch: main
     autoDeploy: true
 
-    # Port the container listens on
-    port: 8000
-
     # Health check — Render will restart the service if this fails
     healthCheckPath: /health
 
