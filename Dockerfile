@@ -22,55 +22,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# Upgrade pip and install wheel / setuptools first for faster builds
 RUN pip install --upgrade pip setuptools wheel
 
-# Copy only the dependency manifest to maximise Docker layer caching.
-# The full source is copied in the final stage.
-COPY pyproject.toml ./
+# Copy requirements and install all dependencies into /install
+# Using requirements.txt directly ensures all transitive deps are resolved
+COPY requirements.txt ./
 
-# Export a plain requirements.txt from pyproject.toml so we can install
-# without requiring the full Poetry toolchain at runtime.
-RUN pip install poetry==1.8.3 \
-    && poetry config virtualenvs.create false \
-    && poetry export --without-hashes --format=requirements.txt \
-       --output requirements.txt \
-    || echo "Poetry export fallback — installing from pyproject.toml directly"
-
-# Install dependencies into a dedicated prefix so they are easy to COPY
-RUN pip install --prefix=/install \
+RUN pip install \
     --no-cache-dir \
-    typing_extensions==4.12.2 \
-    pandas==2.2.2 \
-    numpy==1.26.4 \
-    scipy==1.13.1 \
-    scikit-learn==1.5.1 \
-    statsmodels==0.14.2 \
-    xgboost==2.1.0 \
-    lightgbm==4.4.0 \
-    catboost==1.2.5 \
-    lifelines==0.29.0 \
-    shap==0.45.1 \
-    lime==0.2.0.1 \
-    mlflow==2.14.1 \
-    requests==2.32.3 \
-    httpx==0.27.0 \
-    aiohttp==3.9.5 \
-    beautifulsoup4==4.12.3 \
-    pdfplumber==0.11.1 \
-    python-dotenv==1.0.1 \
-    pyyaml==6.0.1 \
-    tqdm==4.66.4 \
-    loguru==0.7.2 \
-    spacy==3.7.5 \
-    plotly==5.22.0 \
-    matplotlib==3.9.1 \
-    seaborn==0.13.2 \
-    fastapi \
-    uvicorn[standard] \
-    psycopg2-binary \
-    sqlalchemy \
-    alembic
+    --prefix=/install \
+    --no-build-isolation \
+    -r requirements.txt
 
 # ── Stage 2: final ────────────────────────────────────────────────────────────
 FROM python:3.10-slim AS final
