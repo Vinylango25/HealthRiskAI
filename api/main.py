@@ -714,7 +714,7 @@ async def who_disease_burden() -> Dict[str, Any]:
         return cached
 
     url = (
-        "https://ghoapi.azureedge.net/api/NCD_DIABETES"
+        "https://ghoapi.azureedge.net/api/NCD_DIABETES_PREVALENCE_CRUDE"
         "?$top=10&$orderby=NumericValue desc"
     )
     t0 = time.time()
@@ -904,9 +904,11 @@ async def cms_hospitals(
     if cached is not None:
         return cached
 
-    state_clause = f" AND state='{state.upper()}'" if state else ""
-    sql = f"[SELECT * FROM 4pq5-n9py WHERE 1=1{state_clause} LIMIT {limit}]"
-    url = f"https://data.cms.gov/provider-data/api/1/datastore/sql?query={sql}"
+    state_clause = f"&state={state.upper()}" if state else ""
+    url = (
+        f"https://data.cms.gov/provider-data/api/1/datastore/query/xubh-q36u/0"
+        f"?limit={limit}&offset=0&count=true&results=true&keys=true&format=json{state_clause}"
+    )
 
     t0 = time.time()
     try:
@@ -1074,10 +1076,10 @@ async def _fetch_who_life_expectancy_value() -> Optional[float]:
 
 async def _fetch_faers_total(drug: str = "aspirin") -> Optional[int]:
     """Return total FAERS report count for a drug."""
+    # Use the event search endpoint (not count) to get total reports
     url = (
         f"https://api.fda.gov/drug/event.json"
-        f"?search=patient.drug.medicinalproduct:{drug}"
-        f"&count=patient.reaction.reactionmeddrapt.exact&limit=1"
+        f"?search=patient.drug.medicinalproduct:{drug}&limit=1"
     )
     if OPENFDA_API_KEY:
         url += f"&api_key={OPENFDA_API_KEY}"
@@ -1096,13 +1098,15 @@ async def _fetch_trials_count(condition: str = "diabetes") -> Optional[int]:
     url = (
         f"https://clinicaltrials.gov/api/v2/studies"
         f"?query.cond={condition}&filter.overallStatus=RECRUITING"
-        f"&pageSize=1&format=json"
+        f"&pageSize=1&format=json&countTotal=true"
     )
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(url)
             resp.raise_for_status()
-        return resp.json().get("totalCount", 0)
+        data = resp.json()
+        # API v2 uses totalCount at top level
+        return data.get("totalCount") or data.get("total") or len(data.get("studies", []))
     except Exception as exc:
         logger.error("Dashboard trials fetch failed: %s", exc)
         return None
@@ -1110,14 +1114,16 @@ async def _fetch_trials_count(condition: str = "diabetes") -> Optional[int]:
 
 async def _fetch_cms_rated_count() -> Optional[int]:
     """Return count of CMS hospitals with overall rating >= 4."""
-    sql = "[SELECT * FROM 4pq5-n9py WHERE 1=1 LIMIT 500]"
-    url = f"https://data.cms.gov/provider-data/api/1/datastore/sql?query={sql}"
+    url = (
+        "https://data.cms.gov/provider-data/api/1/datastore/query/xubh-q36u/0"
+        "?limit=500&offset=0&count=true&results=true&keys=true&format=json"
+    )
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.get(url)
             resp.raise_for_status()
         raw = resp.json()
-        rows = raw if isinstance(raw, list) else raw.get("results", [])
+        rows = raw.get("results", [])
         count = 0
         for row in rows:
             rating = row.get("hospital_overall_rating")
