@@ -40,6 +40,7 @@ RUN pip install poetry==1.8.3 \
 # Install dependencies into a dedicated prefix so they are easy to COPY
 RUN pip install --prefix=/install \
     --no-cache-dir \
+    typing_extensions==4.12.2 \
     pandas==2.2.2 \
     numpy==1.26.4 \
     scipy==1.13.1 \
