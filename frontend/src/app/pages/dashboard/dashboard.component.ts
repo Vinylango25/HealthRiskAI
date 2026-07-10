@@ -57,23 +57,48 @@ export class DashboardComponent implements OnInit {
     const curves = this.svc.portfolioEquityCurve();
     this.portfolioChartOptions = {
       series: [
-        { name: 'AI Model Portfolio', data: curves[0].map(p => p.y), color: '#1a73e8' },
-        { name: 'Player Portfolio',   data: curves[1].map(p => p.y), color: '#34a853' },
-        { name: 'Benchmark (+6%/yr)',  data: curves[2].map(p => p.y), color: '#8b949e' },
+        { name: 'AI Model Portfolio', data: curves[0].map(p => p.y) },
+        { name: 'Player Portfolio',   data: curves[1].map(p => p.y) },
+        { name: 'Benchmark (+6%/yr)', data: curves[2].map(p => p.y) },
       ],
-      chart: { type: 'line', height: 280, background: 'transparent', toolbar: { show: false },
-               animations: { enabled: true, speed: 800 } },
+      chart: {
+        type: 'line',
+        height: 280,
+        background: 'transparent',
+        toolbar: { show: false },
+        animations: { enabled: false },
+      },
+      colors: ['#1a73e8', '#34a853', '#8b949e'],
       stroke: { curve: 'smooth', width: [3, 2, 1.5], dashArray: [0, 0, 4] },
-      xaxis: { categories: curves[0].map(p => p.x),
-               labels: { style: { colors: '#8b949e', fontSize: '10px' }, rotate: 0,
-                         formatter: (v: string) => v.endsWith('0') || v === 'Q0' || parseInt(v.replace('Q','')) % 8 === 0 ? v : '' } },
-      yaxis: { labels: { style: { colors: '#8b949e', fontSize: '10px' },
-               formatter: (v: number) => `$${v.toFixed(0)}M` } },
+      xaxis: {
+        categories: curves[0].map(p => p.x),
+        labels: {
+          style: { colors: '#8b949e', fontSize: '10px' },
+          rotate: 0,
+          formatter: (v: string) => {
+            const n = parseInt(v.replace('Q', ''));
+            return (n % 8 === 0 || v === 'Q0') ? v : '';
+          }
+        }
+      },
+      yaxis: {
+        labels: {
+          style: { colors: '#8b949e', fontSize: '10px' },
+          formatter: (v: number) => `$${v.toFixed(0)}M`
+        }
+      },
       tooltip: { theme: 'dark', y: { formatter: (v: number) => `$${v.toFixed(1)}M` } },
       legend: { labels: { colors: '#8b949e' }, fontSize: '11px' },
       grid: { borderColor: '#30363d', strokeDashArray: 3 },
       annotations: {
-        xaxis: [{ x: 'Q8', borderColor: '#ea4335', label: { text: 'Pandemic', style: { color: '#ea4335', background: '#21262d', fontSize: '10px' } } }]
+        xaxis: [{
+          x: 'Q8',
+          borderColor: '#ea4335',
+          label: {
+            text: 'Pandemic',
+            style: { color: '#ea4335', background: '#21262d', fontSize: '10px' }
+          }
+        }]
       },
       theme: { mode: 'dark' },
     };
