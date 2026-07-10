@@ -73,8 +73,11 @@ services:
 
       # ── Secrets — set these manually in the Render dashboard ─────────────
       # Do NOT put real values here; this file is committed to git.
+      # These are ALL OPTIONAL — the API starts and runs without them.
+      # Add them only when you have the keys and want those data endpoints
+      # to return live data instead of errors.
       - key: GEMINI_API_KEY
-        sync: false      # Render will prompt you to fill this in
+        sync: false
 
       - key: PHYSIONET_USERNAME
         sync: false
