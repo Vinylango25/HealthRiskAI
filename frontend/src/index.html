@@ -5,9 +5,16 @@
   <title>HealthRisk AI — Analytics Dashboard</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="build" content="render-2026-07-10">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Runtime environment config — overrides hardcoded API_URL if set -->
+  <script>
+    window.__env = {
+      API_URL: 'https://healthrisk-api-e5nv.onrender.com'
+    };
+  </script>
 </head>
 <body>
   <app-root></app-root>
